@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+
+<body>
+<script
+        src="https://code.jquery.com/jquery-1.12.4.min.js"
+        integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ="
+        crossorigin="anonymous"></script>
+
+
+
+
+<div>Adjuntar documentos</div>
+<div>
+    <table>
+        <tr>
+            <td><label for="tipoElemento">Tipo de Elemento</label></td>
+            <td><select id="tipoElemento"></select></td>
+        </tr>
+        <tr>
+            <td><label for="files">Adjuntar:</label></td>
+            <td><input type="file" id="files" name="files"/></td>
+        </tr>
+        <tr><td><button onclick="addFile()">Agregar Archivo</button></td></tr>
+    </table>
+</div>
+<form method="post" id="uploadForm" action="/loadFiles" enctype="multipart/form-data">
+    <table id="uploadTable" class="table table-striped table-bordered">
+        <tr>
+            <th>Title</th>
+            <th>Size</th>
+            <th>Accion</th>
+        </tr>
+        <tbody id="tbodyid">
+        <tr id="tr0">
+            <td id="filetd0" height="10px" width="50px"></td>
+            <td id="filesizetd0" height="10px" width="5px"></td>
+        </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td id="filecount"></td><td id="totalsize"></td>
+        </tr>
+        </tfoot>
+
+    </table>
+    <a class="btn btn-primary"  id="startButton" href="javascript:CloseAndRefresh();">Start</a>
+
+    <button class="btn btn-primary" type="submit">Send</button>
+</form>
+
+
+
+<script type="text/javascript">
+    var totalsizeOfUploadFiles = 0;
+    var files={};
+    var i=0;
+    var tipoElementos=document.getElementById("tipoElemento");
+    addResultOption(tipoElementos,1,"DNI");
+    addResultOption(tipoElementos,2,"PAS");
+    addResultOption(tipoElementos,3,"CE");
+
+    function eliminar(input,element) {
+        $(input).parent().parent().remove();
+        delete files[element];
+    }
+    function addFile(input)
+    {
+        input=$("#files")[0];
+
+        if(input.value) {
+            var listFiles = $('#uploadTable');
+            var fileid = input.files[0];
+            files[i]=fileid;
+            var filesizeInBytes = fileid.size;
+            var filesizeInMB = (filesizeInBytes / (1024 * 1024)).toFixed(2);
+            var filename = fileid.name;
+            $('#tableProducts').append
+            listFiles.append(addRowFiles(fileid));
+            //listFiles.append($('<tr id=tr' + i + '><td id=filetd' + i + '>' + filename + '</td><td id=filesizetd' + i + '>' + filesizeInMB + '</td><td> <button  onclick="javascript:deleteFile(this,'+i+')">Eliminar</button></td></tr>'));
+            totalsizeOfUploadFiles += parseFloat(filesizeInMB);
+            $('#totalsize').text(totalsizeOfUploadFiles.toFixed(2) + " MB");
+            var no = parseInt(i) + 1;
+            $('#filecount').text(no + "files");
+            input.value = "";
+            i = i + 1;
+        }else{
+            alert("Debe seleccionar un archivo")
+        }
+    }
+    function addRowFiles(input) {
+        var tr='<tr><td>'+input.name+'</td><td><a href="javascript:deleteFile(this,'+i+')">Eliminar</a></td></tr>';
+        return tr;
+    }
+
+    //load combo criterio
+    function addResultOption(element,value, description) {
+        element.options[element.options.length] = new Option(description, value);
+    }
+
+    function CloseAndRefresh()
+    {
+        var index=0;
+        var data = new FormData();
+        var c=$.each(files, function(i, file) {
+                data.append('files', files[i]);
+                $("#filesMultiple")[0].files[index]=file;
+                console.log(i);
+                console.log(file);
+                index++;
+            }
+            //addResultOption(item.id, item.attribute);
+        );
+        //data.append('files',files);
+        $("#filesMultiple")[0].files[0]=files[0];
+        //$("#filesMultiple")[0].files=new window.FileList([files[0], files[1]])
+        $("#filesMultiple").show()
+        //$("#uploadForm").submit();
+
+        jQuery.ajax({
+            url: '/loadFiles',
+            data: data,
+            cache: false,
+            contentType: false,
+            processData: false,
+            type: 'POST',
+            success: function(data){
+                alert(data);
+            }
+        });
+
+        //opener.location.reload(true);
+        //self.close();
+    }
+</script>
+</body>
+</html>
